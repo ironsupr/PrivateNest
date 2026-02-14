@@ -64,11 +64,6 @@ export function DashboardHeader({ user, onAddClick }: DashboardHeaderProps) {
 
                 {/* Actions */}
                 <div className="flex items-center space-x-4 ml-4">
-                    <button className="p-2 text-slate-400 hover:text-indigo-accent hover:bg-slate-50 rounded-lg transition-colors relative">
-                        <Bell className="w-5 h-5" />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                    </button>
-
                     <button
                         onClick={onAddClick}
                         className="hidden sm:flex items-center px-4 py-2 bg-indigo-accent hover:bg-indigo-hover text-white text-sm font-medium rounded-lg shadow-soft hover:shadow-glow transition-all group/btn"
