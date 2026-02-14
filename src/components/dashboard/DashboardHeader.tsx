@@ -4,14 +4,15 @@ import { Search, Plus, Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useEffect, useRef, useState } from 'react';
+import { useDashboard } from '@/providers/DashboardProvider';
 
 interface DashboardHeaderProps {
     user: any; // User type from supabase
     onAddClick: () => void;
-    onSearch?: (query: string) => void;
 }
 
-export function DashboardHeader({ user, onAddClick, onSearch }: DashboardHeaderProps) {
+export function DashboardHeader({ user, onAddClick }: DashboardHeaderProps) {
+    const { searchQuery, setSearchQuery } = useDashboard();
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [isMac, setIsMac] = useState(false);
 
@@ -50,7 +51,8 @@ export function DashboardHeader({ user, onAddClick, onSearch }: DashboardHeaderP
                             type="text"
                             placeholder="Search your nest... (Cmd + K)"
                             className="block w-full pl-10 pr-3 py-2 border-none rounded-xl bg-slate-50 text-navy-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-soft/50 focus:bg-white transition-all shadow-sm group-hover:bg-white"
-                            onChange={(e) => onSearch?.(e.target.value)}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                             <kbd className="hidden sm:inline-block border border-slate-200 rounded px-1.5 text-[10px] font-medium text-slate-400 bg-white">

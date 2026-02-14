@@ -12,36 +12,60 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useBookmarks } from '@/hooks/useBookmarks';
+import { useDashboard } from '@/providers/DashboardProvider';
 
 interface SidebarProps {
     className?: string;
-    onTagSelect?: (tag: string) => void;
-    selectedTag?: string | null;
-    onClearTag?: () => void;
 }
 
 export function Sidebar({
     className = '',
-    onTagSelect,
-    selectedTag,
-    onClearTag
 }: SidebarProps) {
     const pathname = usePathname();
+    const {
+        currentView,
+        setCurrentView,
+        selectedTag,
+        setSelectedTag
+    } = useDashboard();
 
     const { getAllTags } = useBookmarks();
     const tags = getAllTags();
+
+    const handleViewChange = (view: 'standard' | 'all' | 'favorites' | 'archive') => {
+        setSelectedTag(null);
+        setCurrentView(view);
+    };
 
     const navItems = [
         {
             label: 'My Nest',
             icon: LayoutDashboard,
             href: '/dashboard',
-            active: pathname === '/dashboard' && !selectedTag,
-            onClick: () => onClearTag?.()
+            active: currentView === 'standard' && !selectedTag,
+            onClick: () => handleViewChange('standard')
         },
-        { label: 'All Bookmarks', icon: GalleryVerticalEnd, href: '/dashboard/all' },
-        { label: 'Favorites', icon: Star, href: '/dashboard/favorites' },
-        { label: 'Archive', icon: Archive, href: '/dashboard/archive' },
+        {
+            label: 'All Bookmarks',
+            icon: GalleryVerticalEnd,
+            href: '/dashboard',
+            active: currentView === 'all' && !selectedTag,
+            onClick: () => handleViewChange('all')
+        },
+        {
+            label: 'Favorites',
+            icon: Star,
+            href: '/dashboard',
+            active: currentView === 'favorites' && !selectedTag,
+            onClick: () => handleViewChange('favorites')
+        },
+        {
+            label: 'Archive',
+            icon: Archive,
+            href: '/dashboard',
+            active: currentView === 'archive' && !selectedTag,
+            onClick: () => handleViewChange('archive')
+        },
     ];
 
     return (
@@ -61,7 +85,7 @@ export function Sidebar({
                 </div>
                 {navItems.map((item) => (
                     <Link
-                        key={item.href}
+                        key={item.label}
                         href={item.href}
                         onClick={(e) => {
                             if (item.onClick) {
@@ -95,7 +119,7 @@ export function Sidebar({
                     {tags.map((tag) => (
                         <button
                             key={tag}
-                            onClick={() => onTagSelect?.(tag)}
+                            onClick={() => setSelectedTag(tag)}
                             className={`w-full flex items-center px-3 py-1.5 rounded-lg text-sm transition-colors group ${selectedTag === tag
                                 ? 'bg-indigo-50/50 text-indigo-accent'
                                 : 'text-navy-700 hover:bg-white/60 hover:text-navy-900'

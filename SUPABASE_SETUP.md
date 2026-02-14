@@ -125,3 +125,16 @@ npm run dev
 ```
 
 Open `http://localhost:3000` — you should see the login page!
+
+---
+
+## Step 3c: Add Archive and Favorites (if upgrading)
+
+If you already created the table, run this to add archive and favorite support:
+
+```sql
+ALTER TABLE bookmarks ADD COLUMN IF NOT EXISTS is_favorite BOOLEAN DEFAULT false;
+ALTER TABLE bookmarks ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT false;
+```
+
+> If you're setting up for the first time, you can add these columns directly in Step 3's `CREATE TABLE` instead.

@@ -8,6 +8,8 @@ export interface Bookmark {
   tags: string[];
   is_read: boolean;
   is_pinned: boolean;
+  is_favorite: boolean;
+  is_archived: boolean;
   notes: string;
   created_at: string;
   updated_at: string;

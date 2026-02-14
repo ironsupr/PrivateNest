@@ -205,6 +205,76 @@ export function useBookmarks() {
         }
     };
 
+    const toggleFavorite = async (id: string, currentStatus: boolean) => {
+        const newStatus = !currentStatus;
+        const now = new Date().toISOString();
+
+        // Optimistic update
+        setBookmarks((prev) =>
+            prev.map((b) =>
+                b.id === id ? { ...b, is_favorite: newStatus, updated_at: now } : b
+            )
+        );
+
+        try {
+            const { error } = await supabase
+                .from('bookmarks')
+                .update({ is_favorite: newStatus, updated_at: now })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Favorite error:', error.message);
+                setBookmarks((prev) =>
+                    prev.map((b) =>
+                        b.id === id ? { ...b, is_favorite: currentStatus } : b
+                    )
+                );
+            }
+        } catch (err) {
+            console.error('Favorite error:', err);
+            setBookmarks((prev) =>
+                prev.map((b) =>
+                    b.id === id ? { ...b, is_favorite: currentStatus } : b
+                )
+            );
+        }
+    };
+
+    const toggleArchive = async (id: string, currentStatus: boolean) => {
+        const newStatus = !currentStatus;
+        const now = new Date().toISOString();
+
+        // Optimistic update
+        setBookmarks((prev) =>
+            prev.map((b) =>
+                b.id === id ? { ...b, is_archived: newStatus, updated_at: now } : b
+            )
+        );
+
+        try {
+            const { error } = await supabase
+                .from('bookmarks')
+                .update({ is_archived: newStatus, updated_at: now })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Archive error:', error.message);
+                setBookmarks((prev) =>
+                    prev.map((b) =>
+                        b.id === id ? { ...b, is_archived: currentStatus } : b
+                    )
+                );
+            }
+        } catch (err) {
+            console.error('Archive error:', err);
+            setBookmarks((prev) =>
+                prev.map((b) =>
+                    b.id === id ? { ...b, is_archived: currentStatus } : b
+                )
+            );
+        }
+    };
+
     const bulkDelete = async (ids: string[]) => {
         const { error } = await supabase
             .from('bookmarks')
@@ -276,6 +346,8 @@ export function useBookmarks() {
             tags: item.tags || [],
             is_read: false,
             is_pinned: false,
+            is_favorite: false,
+            is_archived: false,
             notes: '',
         }));
 
@@ -320,6 +392,8 @@ export function useBookmarks() {
         toggleRead,
         updateBookmark,
         togglePin,
+        toggleFavorite,
+        toggleArchive,
         bulkDelete,
         bulkToggleRead,
         bulkTag,

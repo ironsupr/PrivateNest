@@ -14,17 +14,32 @@ import { AddBookmarkDialog } from '@/components/dashboard/AddBookmarkDialog';
 import { DeleteConfirmationDialog } from '@/components/dashboard/DeleteConfirmationDialog';
 
 
+import { useDashboard } from '@/providers/DashboardProvider';
+
 export default function DashboardPage() {
     const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
-    const { bookmarks, loading: bookmarksLoading, deleteBookmark, toggleRead } = useBookmarks();
+    const {
+        bookmarks,
+        loading: bookmarksLoading,
+        deleteBookmark,
+        toggleRead,
+        toggleFavorite,
+        toggleArchive
+    } = useBookmarks();
     const [authLoading, setAuthLoading] = useState(true);
 
-    // Search and Filter State
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
-    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
+    const {
+        searchQuery,
+        setSearchQuery,
+        selectedTag,
+        setSelectedTag,
+        sortBy,
+        setSortBy,
+        currentView,
+        setCurrentView
+    } = useDashboard();
 
     // Dialog State
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,6 +93,17 @@ export default function DashboardPage() {
     const filteredBookmarks = useMemo(() => {
         let result = [...bookmarks];
 
+        // View Filtering
+        if (currentView === 'standard') {
+            result = result.filter(b => !b.is_archived);
+        } else if (currentView === 'all') {
+            result = result.filter(b => !b.is_archived);
+        } else if (currentView === 'favorites') {
+            result = result.filter(b => b.is_favorite && !b.is_archived);
+        } else if (currentView === 'archive') {
+            result = result.filter(b => b.is_archived);
+        }
+
         // Search filter
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
@@ -103,78 +129,86 @@ export default function DashboardPage() {
         });
 
         return result;
-    }, [bookmarks, searchQuery, selectedTag, sortBy]);
+    }, [bookmarks, searchQuery, selectedTag, sortBy, currentView]);
+
+    const viewLabels = {
+        standard: 'My Nest',
+        all: 'All Bookmarks',
+        favorites: 'Favorites',
+        archive: 'Archive'
+    };
 
     if (authLoading) {
-        return null; // Layout handles loading state or skeleton if needed
+        return null;
     }
 
     return (
-        <div className="flex min-h-screen bg-white">
-            <Sidebar
-                onTagSelect={setSelectedTag}
-                selectedTag={selectedTag}
-                onClearTag={() => setSelectedTag(null)}
+        <div className="flex-1 bg-white min-h-screen">
+            <DashboardHeader
+                user={user}
+                onAddClick={handleAddClick}
             />
 
-            <div className="flex-1 lg:pl-64">
-                <DashboardHeader
-                    user={user}
-                    onAddClick={handleAddClick}
-                    onSearch={setSearchQuery}
+            <main className="p-8 max-w-7xl mx-auto w-full">
+                <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-navy-900 mb-2">
+                            {selectedTag ? `#${selectedTag}` : viewLabels[currentView]}
+                        </h1>
+                        <p className="text-navy-700/70">
+                            {selectedTag
+                                ? `Showing all bookmarks tagged with "${selectedTag}"`
+                                : currentView === 'standard'
+                                    ? 'Welcome back to your digital sanctuary.'
+                                    : `Viewing your ${viewLabels[currentView].toLowerCase()}.`}
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            className="bg-slate-50 border border-slate-100 text-navy-700 text-sm rounded-xl px-4 py-2 hover:bg-white hover:shadow-soft transition-all focus:outline-none focus:ring-2 focus:ring-indigo-accent/20"
+                        >
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="title">Alphabetical</option>
+                        </select>
+                    </div>
+                </div>
+
+                <StatsOverview bookmarks={bookmarks} />
+
+                <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-navy-900">
+                        {searchQuery ? `Search Results (${filteredBookmarks.length})` :
+                            selectedTag ? `Tagged: ${selectedTag}` :
+                                currentView === 'standard' ? 'Recent Bookmarks' : viewLabels[currentView]}
+                    </h2>
+                    {(selectedTag || currentView !== 'standard') && (
+                        <button
+                            onClick={() => {
+                                setSelectedTag(null);
+                                setCurrentView('standard');
+                            }}
+                            className="text-sm font-medium text-indigo-accent hover:text-indigo-hover transition-colors"
+                        >
+                            Reset View
+                        </button>
+                    )}
+                </div>
+
+                <BookmarkGrid
+                    bookmarks={filteredBookmarks}
+                    loading={bookmarksLoading}
+                    onDelete={handleDeleteRequest}
+                    onEdit={handleEditClick}
+                    onToggleRead={toggleRead}
+                    onToggleFavorite={toggleFavorite}
+                    onToggleArchive={toggleArchive}
                 />
+            </main>
 
-                <main className="p-8 max-w-7xl mx-auto w-full">
-                    <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold text-navy-900 mb-2">
-                                {selectedTag ? `#${selectedTag}` : 'My Nest'}
-                            </h1>
-                            <p className="text-navy-700/70">
-                                {selectedTag
-                                    ? `Showing all bookmarks tagged with "${selectedTag}"`
-                                    : 'Welcome back to your digital sanctuary.'}
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as any)}
-                                className="bg-slate-50 border border-slate-100 text-navy-700 text-sm rounded-xl px-4 py-2 hover:bg-white hover:shadow-soft transition-all focus:outline-none focus:ring-2 focus:ring-indigo-accent/20"
-                            >
-                                <option value="newest">Newest First</option>
-                                <option value="oldest">Oldest First</option>
-                                <option value="title">Alphabetical</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <StatsOverview bookmarks={bookmarks} />
-
-                    <div className="mb-6 flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-navy-900">
-                            {searchQuery ? `Search Results (${filteredBookmarks.length})` : 'Recent Bookmarks'}
-                        </h2>
-                        {selectedTag && (
-                            <button
-                                onClick={() => setSelectedTag(null)}
-                                className="text-sm font-medium text-indigo-accent hover:text-indigo-hover transition-colors"
-                            >
-                                Clear Filter
-                            </button>
-                        )}
-                    </div>
-
-                    <BookmarkGrid
-                        bookmarks={filteredBookmarks}
-                        loading={bookmarksLoading}
-                        onDelete={handleDeleteRequest}
-                        onEdit={handleEditClick}
-                        onToggleRead={toggleRead}
-                    />
-                </main>
-            </div>
 
             <AddBookmarkDialog
                 isOpen={dialogOpen}
@@ -188,6 +222,6 @@ export default function DashboardPage() {
                 onConfirm={handleConfirmDelete}
                 loading={isDeleting}
             />
-        </div>
+        </div >
     );
 }
