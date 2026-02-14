@@ -117,32 +117,34 @@ src/
 
 ## 🐛 Problems & Solutions
 
-### 1. Supabase Realtime + RLS not delivering events
-**Problem:** After adding a bookmark, other tabs didn't update. Supabase Realtime with Row Level Security doesn't always deliver `postgres_changes` events to the same client.
+### 1. Duplicate Bookmark Detection (State Sync)
+**Problem:** Users reported that even after deleting a bookmark, the "Add" dialog still flagged it as "already exists". This happened because the Dashboard and the Dialog were using separate instances of the `useBookmarks` hook, which weren't sharing state.
+
+**Solution:** Refactored the app to use a centralized `BookmarkProvider`. All components now consume the same `BookmarkContext`, ensuring a single source of truth. As soon as a bookmark is deleted in the grid, the duplicate check in the dialog is updated instantly.
+
+### 2. Shared Bookmark 404 Error (Next.js 15+ Lifecycle)
+**Problem:** Individual public bookmark pages (`/b/[slug]`) were returning 404s in production even when the data existed. 
+
+**Solution:** In Next.js 15 and 16, `params` and `searchParams` in Server Components are now Promises and must be explicitly awaited. I updated the shared route to `await params` before accessing the slug for the Supabase query.
+
+### 3. Login "Request Path is Invalid" on Deployed Site
+**Problem:** Google OAuth was working locally but failed on the Vercel deployment with a generic "request path is invalid" error.
+
+**Solution:** Identified that Supabase's authentication redirect system is extremely sensitive to URL structure. Fixed this by:
+- Adding the explicit callback path (`/auth/callback`) to the **Additional Redirect URLs**.
+- Ensuring the **Site URL** in Supabase included the mandatory `https://` protocol (omitting the protocol or the trailing path often causes this cryptic error).
+
+### 4. Sidebar Folder Sync vs Local State
+**Problem:** Creating a folder from a bookmark card didn't update the folder list in the Sidebar because the data fetching was scattered across components.
+
+**Solution:** Moved folder management into a `CollectionProvider`. This shared state ensures that creating, renaming, or deleting a folder anywhere in the UI is instantly reflected across all components.
+
+### 5. Supabase Realtime + RLS not delivering events
+**Problem:** After adding a bookmark, other tabs didn't update. Supabase Realtime with Row Level Security doesn't always deliver `postgres_changes` events to the same client if policies are complex.
 
 **Solution:** Implemented a two-layer approach:
-- **Optimistic local state updates** — after insert/delete/update succeeds, immediately update React state
-- **`visibilitychange` + `focus` listeners** — refetch bookmarks when a tab regains focus, ensuring data is always fresh
-
-### 2. CORS when fetching URL metadata
-**Problem:** Fetching `<title>` and `<meta>` tags from external URLs in the browser triggers CORS errors.
-
-**Solution:** Created a Next.js API route (`/api/metadata`) that fetches the URL server-side and parses the HTML with regex. The browser only talks to our own API.
-
-### 3. Metadata not ready when user clicks "Add" immediately
-**Problem:** If the user pastes a URL and immediately clicks "Add Bookmark" before the debounced metadata fetch completes, the bookmark would save without a title.
-
-**Solution:** The submit handler checks if metadata was fetched. If not, it performs a synchronous fetch before saving, so the bookmark always has a proper title.
-
-### 4. `create-next-app` rejecting capital letters in path
-**Problem:** `create-next-app` failed because the parent directory `Smart Bookmark App` contained uppercase letters, which npm package naming rules reject.
-
-**Solution:** Created the project in a subdirectory (`privatenest/`) with a lowercase name.
-
-### 5. Placeholder env vars causing build failures
-**Problem:** Running `next build` with placeholder Supabase env vars (`your-project-url`) caused the root page to fail because `createServerClient` tried to make real HTTP requests during static generation.
-
-**Solution:** Added `export const dynamic = 'force-dynamic'` to the root page to skip static prerendering.
+- **Optimistic local state updates** — after insert/delete/update succeeds, immediately update React state.
+- **`visibilitychange` + `focus` listeners** — refetch bookmarks when a tab regains focus, ensuring data is always fresh.
 
 ---
 
