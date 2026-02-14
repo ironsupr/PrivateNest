@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { Logo } from '@/components/ui/Logo';
 
 export default function LoginPage() {
     const supabase = createClient();
@@ -21,10 +22,7 @@ export default function LoginPage() {
             <nav className="fixed w-full z-50 top-0 start-0 border-b border-slate-100 bg-white/90 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between p-4 md:px-8 h-20">
                     <a className="flex items-center space-x-3 group" href="#">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-accent text-white flex items-center justify-center shadow-soft transform transition-transform group-hover:scale-105">
-                            <span className="material-symbols-outlined text-2xl">bookmark</span>
-                        </div>
-                        <span className="self-center text-xl font-bold text-navy-900 tracking-tight">PrivateNest</span>
+                        <Logo size={40} showText />
                     </a>
                     <div className="flex items-center space-x-4">
                         <button
@@ -285,10 +283,7 @@ export default function LoginPage() {
                     </div>
                     <div className="mt-24 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-sm text-slate-400">
                         <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                            <div className="w-6 h-6 rounded bg-indigo-500 flex items-center justify-center text-white">
-                                <span className="material-symbols-outlined text-[16px]">bookmark</span>
-                            </div>
-                            <span className="font-semibold text-white">PrivateNest</span>
+                            <Logo size={24} showText className="text-white" />
                             <span className="ml-2 border-l border-white/20 pl-3">© 2025</span>
                         </div>
                         <div className="flex space-x-8">

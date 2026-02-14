@@ -22,6 +22,7 @@ import { usePathname } from 'next/navigation';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useCollections } from '@/hooks/useCollections';
 import { useDashboard } from '@/providers/DashboardProvider';
+import { Logo } from '@/components/ui/Logo';
 import { useState, useRef, useEffect } from 'react';
 
 interface SidebarProps {
@@ -184,10 +185,7 @@ export function Sidebar({
         <aside className={`w-64 h-screen fixed left-0 top-0 bg-slate-50/50 backdrop-blur-sm border-r border-slate-100 flex flex-col ${className}`}>
             {/* Brand */}
             <div className="h-16 flex items-center px-6 border-b border-slate-100/50">
-                <div className="w-8 h-8 rounded-lg bg-indigo-accent text-white flex items-center justify-center mr-3 shadow-soft">
-                    <span className="material-symbols-outlined text-xl">bookmark</span>
-                </div>
-                <span className="text-lg font-bold text-navy-900 tracking-tight">PrivateNest</span>
+                <Logo size={32} showText />
             </div>
 
             {/* Main Nav */}

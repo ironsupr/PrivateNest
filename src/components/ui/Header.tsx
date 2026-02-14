@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { ThemeToggle } from './ThemeToggle';
-import { LogOut, Bookmark } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { Logo } from './Logo';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -34,9 +35,7 @@ export function Header() {
         <header className="header">
             <div className="header-inner">
                 <div className="header-brand">
-                    <div className="header-logo">
-                        <Bookmark className="w-5 h-5" />
-                    </div>
+                    <Logo size={32} />
                     <h1 className="header-title">PrivateNest</h1>
                 </div>
                 <div className="header-actions">
