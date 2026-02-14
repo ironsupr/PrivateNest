@@ -26,7 +26,7 @@ A smart, private bookmark manager built with **Next.js 15**, **Supabase**, and *
 ### Polish
 - **Dark/Light mode** — Toggle or auto-detect system preference
 - **Stats bar** — Total, read/unread, weekly additions, top tags
-- **Keyboard shortcuts** — `Ctrl+K` to add, `/` to search
+- **Keyboard shortcuts** — `Ctrl+Alt+N` to add, `Ctrl+K` to search
 - **Responsive** — Works on mobile and desktop
 - **Smooth animations** — Slide-in forms, fade-in cards
 
@@ -48,7 +48,7 @@ A smart, private bookmark manager built with **Next.js 15**, **Supabase**, and *
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 15+
 - A [Supabase](https://supabase.com) account (free tier works)
 - A Google Cloud OAuth app ([console.cloud.google.com](https://console.cloud.google.com))
 
@@ -147,21 +147,3 @@ src/
 - **`visibilitychange` + `focus` listeners** — refetch bookmarks when a tab regains focus, ensuring data is always fresh.
 
 ---
-
-## 📦 Deployment
-
-### Deploy to Vercel
-
-1. Push to GitHub
-2. Import the repo on [vercel.com](https://vercel.com)
-3. Add environment variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Update the **Google OAuth redirect URI** in the Supabase dashboard to include your Vercel domain
-5. Deploy
-
----
-
-## 📄 License
-
-MIT
