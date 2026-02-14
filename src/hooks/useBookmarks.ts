@@ -150,7 +150,7 @@ export function useBookmarks() {
 
     const updateBookmark = async (
         id: string,
-        fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags'>>
+        fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags' | 'notes'>>
     ) => {
         const now = new Date().toISOString();
 
@@ -167,6 +167,128 @@ export function useBookmarks() {
                 b.id === id ? { ...b, ...fields, updated_at: now } : b
             )
         );
+    };
+
+    const togglePin = async (id: string, currentStatus: boolean) => {
+        const newStatus = !currentStatus;
+        const now = new Date().toISOString();
+
+        // Optimistic update first
+        setBookmarks((prev) =>
+            prev.map((b) =>
+                b.id === id ? { ...b, is_pinned: newStatus, updated_at: now } : b
+            )
+        );
+
+        try {
+            const { error } = await supabase
+                .from('bookmarks')
+                .update({ is_pinned: newStatus, updated_at: now })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Pin error:', error.message);
+                // Revert on failure
+                setBookmarks((prev) =>
+                    prev.map((b) =>
+                        b.id === id ? { ...b, is_pinned: currentStatus } : b
+                    )
+                );
+            }
+        } catch (err) {
+            console.error('Pin error:', err);
+            setBookmarks((prev) =>
+                prev.map((b) =>
+                    b.id === id ? { ...b, is_pinned: currentStatus } : b
+                )
+            );
+        }
+    };
+
+    const bulkDelete = async (ids: string[]) => {
+        const { error } = await supabase
+            .from('bookmarks')
+            .delete()
+            .in('id', ids);
+
+        if (error) throw error;
+
+        setBookmarks((prev) => prev.filter((b) => !ids.includes(b.id)));
+    };
+
+    const bulkToggleRead = async (ids: string[], markAsRead: boolean) => {
+        const now = new Date().toISOString();
+
+        const { error } = await supabase
+            .from('bookmarks')
+            .update({ is_read: markAsRead, updated_at: now })
+            .in('id', ids);
+
+        if (error) throw error;
+
+        setBookmarks((prev) =>
+            prev.map((b) =>
+                ids.includes(b.id) ? { ...b, is_read: markAsRead, updated_at: now } : b
+            )
+        );
+    };
+
+    const bulkTag = async (ids: string[], tag: string) => {
+        // Add tag to all selected bookmarks (append if not already present)
+        const updates = bookmarks
+            .filter((b) => ids.includes(b.id))
+            .map((b) => ({
+                id: b.id,
+                tags: b.tags?.includes(tag) ? b.tags : [...(b.tags || []), tag],
+            }));
+
+        for (const u of updates) {
+            await supabase
+                .from('bookmarks')
+                .update({ tags: u.tags, updated_at: new Date().toISOString() })
+                .eq('id', u.id);
+        }
+
+        setBookmarks((prev) =>
+            prev.map((b) => {
+                if (!ids.includes(b.id)) return b;
+                return {
+                    ...b,
+                    tags: b.tags?.includes(tag) ? b.tags : [...(b.tags || []), tag],
+                    updated_at: new Date().toISOString(),
+                };
+            })
+        );
+    };
+
+    const importBookmarks = async (
+        items: Array<{ url: string; title: string; tags?: string[] }>
+    ) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const rows = items.map((item) => ({
+            user_id: user.id,
+            url: item.url,
+            title: item.title || item.url,
+            description: '',
+            favicon_url: `https://www.google.com/s2/favicons?domain=${new URL(item.url).hostname}&sz=64`,
+            tags: item.tags || [],
+            is_read: false,
+            is_pinned: false,
+            notes: '',
+        }));
+
+        const { data, error } = await supabase
+            .from('bookmarks')
+            .insert(rows)
+            .select();
+
+        if (error) throw error;
+        if (data) {
+            setBookmarks((prev) => [...data, ...prev]);
+        }
+        return data?.length || 0;
     };
 
     const checkDuplicate = (url: string): boolean => {
@@ -197,6 +319,11 @@ export function useBookmarks() {
         deleteBookmark,
         toggleRead,
         updateBookmark,
+        togglePin,
+        bulkDelete,
+        bulkToggleRead,
+        bulkTag,
+        importBookmarks,
         checkDuplicate,
         getAllTags,
     };

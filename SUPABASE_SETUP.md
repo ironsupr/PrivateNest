@@ -96,6 +96,19 @@ ALTER PUBLICATION supabase_realtime ADD TABLE bookmarks;
 
 ---
 
+## Step 3b: Add Tier 3 Columns (if upgrading)
+
+If you already created the table above, run this to add pin and notes support:
+
+```sql
+ALTER TABLE bookmarks ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
+ALTER TABLE bookmarks ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
+```
+
+> If you're setting up for the first time, you can add these columns directly in Step 3's `CREATE TABLE` instead.
+
+---
+
 ## Step 4: Enable Realtime
 
 1. Go to **Database → Replication** in Supabase Dashboard

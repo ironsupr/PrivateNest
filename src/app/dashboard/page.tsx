@@ -9,9 +9,11 @@ import { SortSelect } from '@/components/bookmarks/SortSelect';
 import { TagFilter } from '@/components/tags/TagFilter';
 import { StatsBar } from '@/components/ui/StatsBar';
 import { ExportButton } from '@/components/ui/ExportButton';
+import { ImportButton } from '@/components/ui/ImportButton';
+import { BulkActionsBar } from '@/components/bookmarks/BulkActionsBar';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckSquare, Square } from 'lucide-react';
 import type { SortOption } from '@/types';
 
 export default function DashboardPage() {
@@ -22,6 +24,11 @@ export default function DashboardPage() {
         deleteBookmark,
         toggleRead,
         updateBookmark,
+        togglePin,
+        bulkDelete,
+        bulkToggleRead,
+        bulkTag,
+        importBookmarks,
         checkDuplicate,
         getAllTags,
     } = useBookmarks();
@@ -30,6 +37,8 @@ export default function DashboardPage() {
     const [sortOption, setSortOption] = useState<SortOption>('newest');
     const [activeTag, setActiveTag] = useState<string | null>(null);
     const [addFormExpanded, setAddFormExpanded] = useState(false);
+    const [selectMode, setSelectMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     // Keyboard shortcuts
@@ -45,6 +54,24 @@ export default function DashboardPage() {
         onToggleAddForm: handleToggleAddForm,
         onFocusSearch: handleFocusSearch,
     });
+
+    const handleSelect = (id: string) => {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    };
+
+    const handleClearSelection = () => {
+        setSelectedIds([]);
+        setSelectMode(false);
+    };
+
+    const toggleSelectMode = () => {
+        if (selectMode) {
+            setSelectedIds([]);
+        }
+        setSelectMode(!selectMode);
+    };
 
     if (loading) {
         return (
@@ -72,6 +99,16 @@ export default function DashboardPage() {
                         onExpandChange={setAddFormExpanded}
                     />
 
+                    {/* Bulk Actions Bar */}
+                    <BulkActionsBar
+                        selectedIds={selectedIds}
+                        bookmarks={bookmarks}
+                        onClearSelection={handleClearSelection}
+                        onBulkDelete={bulkDelete}
+                        onBulkToggleRead={bulkToggleRead}
+                        onBulkTag={bulkTag}
+                    />
+
                     {/* Controls */}
                     <div className="dashboard-controls">
                         <BookmarkSearch
@@ -83,6 +120,18 @@ export default function DashboardPage() {
                             sortOption={sortOption}
                             onSortChange={setSortOption}
                         />
+
+                        {/* Select mode toggle */}
+                        <button
+                            onClick={toggleSelectMode}
+                            className={`btn btn-sm ${selectMode ? 'btn-primary' : 'btn-secondary'}`}
+                            title={selectMode ? 'Exit selection mode' : 'Select bookmarks'}
+                        >
+                            {selectMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                            {selectMode ? 'Done' : 'Select'}
+                        </button>
+
+                        <ImportButton onImport={importBookmarks} />
                         <ExportButton bookmarks={bookmarks} />
                     </div>
 
@@ -102,6 +151,10 @@ export default function DashboardPage() {
                         onDelete={deleteBookmark}
                         onToggleRead={toggleRead}
                         onUpdate={updateBookmark}
+                        onTogglePin={togglePin}
+                        selectable={selectMode}
+                        selectedIds={selectedIds}
+                        onSelect={handleSelect}
                     />
 
                     {/* Keyboard shortcut hints */}

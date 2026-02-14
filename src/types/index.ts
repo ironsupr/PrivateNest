@@ -7,6 +7,8 @@ export interface Bookmark {
   favicon_url: string;
   tags: string[];
   is_read: boolean;
+  is_pinned: boolean;
+  notes: string;
   created_at: string;
   updated_at: string;
 }

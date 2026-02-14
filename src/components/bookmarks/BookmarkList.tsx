@@ -11,7 +11,11 @@ interface BookmarkListProps {
     activeTag: string | null;
     onDelete: (id: string) => void;
     onToggleRead: (id: string, currentStatus: boolean) => void;
-    onUpdate: (id: string, fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags'>>) => Promise<void>;
+    onUpdate: (id: string, fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags' | 'notes'>>) => Promise<void>;
+    onTogglePin: (id: string, currentStatus: boolean) => void;
+    selectable?: boolean;
+    selectedIds?: string[];
+    onSelect?: (id: string) => void;
 }
 
 export function BookmarkList({
@@ -22,6 +26,10 @@ export function BookmarkList({
     onDelete,
     onToggleRead,
     onUpdate,
+    onTogglePin,
+    selectable = false,
+    selectedIds = [],
+    onSelect,
 }: BookmarkListProps) {
     // Filter by search
     let filtered = bookmarks;
@@ -42,8 +50,12 @@ export function BookmarkList({
         filtered = filtered.filter((b) => b.tags?.includes(activeTag));
     }
 
-    // Sort
+    // Sort — pinned always first, then by sort option
     const sorted = [...filtered].sort((a, b) => {
+        // Pinned first
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+
         switch (sortOption) {
             case 'newest':
                 return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -90,6 +102,10 @@ export function BookmarkList({
                         onDelete={onDelete}
                         onToggleRead={onToggleRead}
                         onUpdate={onUpdate}
+                        onTogglePin={onTogglePin}
+                        selectable={selectable}
+                        selected={selectedIds.includes(bookmark.id)}
+                        onSelect={onSelect}
                     />
                 ))}
             </div>

@@ -2,21 +2,37 @@
 
 import { Bookmark } from '@/types';
 import { TagBadge } from '@/components/tags/TagBadge';
-import { Trash2, ExternalLink, BookOpen, BookMarked, Pencil, Check, X } from 'lucide-react';
+import { Trash2, ExternalLink, BookOpen, BookMarked, Pencil, Check, X, Pin, PinOff, StickyNote } from 'lucide-react';
 import { useState } from 'react';
 
 interface BookmarkCardProps {
     bookmark: Bookmark;
     onDelete: (id: string) => void;
     onToggleRead: (id: string, currentStatus: boolean) => void;
-    onUpdate: (id: string, fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags'>>) => Promise<void>;
+    onUpdate: (id: string, fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags' | 'notes'>>) => Promise<void>;
+    onTogglePin: (id: string, currentStatus: boolean) => void;
+    selectable?: boolean;
+    selected?: boolean;
+    onSelect?: (id: string) => void;
 }
 
-export function BookmarkCard({ bookmark, onDelete, onToggleRead, onUpdate }: BookmarkCardProps) {
+export function BookmarkCard({
+    bookmark,
+    onDelete,
+    onToggleRead,
+    onUpdate,
+    onTogglePin,
+    selectable = false,
+    selected = false,
+    onSelect,
+}: BookmarkCardProps) {
     const [deleting, setDeleting] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [showNotes, setShowNotes] = useState(false);
+    const [noteText, setNoteText] = useState(bookmark.notes || '');
+    const [savingNote, setSavingNote] = useState(false);
 
     // Edit state
     const [editTitle, setEditTitle] = useState(bookmark.title);
@@ -61,6 +77,16 @@ export function BookmarkCard({ bookmark, onDelete, onToggleRead, onUpdate }: Boo
             // Stay in edit mode on error
         }
         setSaving(false);
+    };
+
+    const handleSaveNote = async () => {
+        setSavingNote(true);
+        try {
+            await onUpdate(bookmark.id, { notes: noteText });
+        } catch {
+            // Ignore
+        }
+        setSavingNote(false);
     };
 
     const handleEditTagAdd = () => {
@@ -188,8 +214,20 @@ export function BookmarkCard({ bookmark, onDelete, onToggleRead, onUpdate }: Boo
 
     // ── Normal View Mode ──
     return (
-        <div className={`bookmark-card ${bookmark.is_read ? 'bookmark-read' : ''}`}>
+        <div className={`bookmark-card ${bookmark.is_read ? 'bookmark-read' : ''} ${bookmark.is_pinned ? 'bookmark-pinned' : ''} ${selected ? 'bookmark-selected' : ''}`}>
             <div className="bookmark-card-inner">
+                {/* Selection checkbox */}
+                {selectable && (
+                    <div className="bookmark-select-wrap">
+                        <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() => onSelect?.(bookmark.id)}
+                            className="bookmark-checkbox"
+                        />
+                    </div>
+                )}
+
                 <div className="bookmark-favicon-wrap">
                     {bookmark.favicon_url ? (
                         <img
@@ -209,6 +247,7 @@ export function BookmarkCard({ bookmark, onDelete, onToggleRead, onUpdate }: Boo
 
                 <div className="bookmark-content">
                     <div className="bookmark-header">
+                        {bookmark.is_pinned && <Pin className="w-3.5 h-3.5 pin-indicator" />}
                         <a
                             href={bookmark.url}
                             target="_blank"
@@ -234,9 +273,49 @@ export function BookmarkCard({ bookmark, onDelete, onToggleRead, onUpdate }: Boo
                         </div>
                         <span className="bookmark-time">{timeAgo}</span>
                     </div>
+
+                    {/* Notes section */}
+                    {(showNotes || bookmark.notes) && (
+                        <div className="bookmark-notes">
+                            <textarea
+                                value={noteText}
+                                onChange={(e) => setNoteText(e.target.value)}
+                                placeholder="Add a note..."
+                                className="bookmark-notes-input"
+                                rows={2}
+                            />
+                            {noteText !== (bookmark.notes || '') && (
+                                <button
+                                    onClick={handleSaveNote}
+                                    className="btn btn-primary btn-sm bookmark-notes-save"
+                                    disabled={savingNote}
+                                >
+                                    {savingNote ? 'Saving...' : 'Save Note'}
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="bookmark-actions">
+                    <button
+                        onClick={() => onTogglePin(bookmark.id, bookmark.is_pinned)}
+                        className={`btn-icon ${bookmark.is_pinned ? 'btn-icon-active' : ''}`}
+                        aria-label={bookmark.is_pinned ? 'Unpin' : 'Pin'}
+                        title={bookmark.is_pinned ? 'Unpin' : 'Pin to top'}
+                    >
+                        {bookmark.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                    </button>
+
+                    <button
+                        onClick={() => { setShowNotes(!showNotes); setNoteText(bookmark.notes || ''); }}
+                        className={`btn-icon ${bookmark.notes ? 'btn-icon-active' : ''}`}
+                        aria-label="Notes"
+                        title={bookmark.notes ? 'View notes' : 'Add note'}
+                    >
+                        <StickyNote className="w-4 h-4" />
+                    </button>
+
                     <button
                         onClick={startEditing}
                         className="btn-icon"
