@@ -1,0 +1,32 @@
+'use client';
+
+import { Search } from 'lucide-react';
+
+interface BookmarkSearchProps {
+    searchQuery: string;
+    onSearchChange: (query: string) => void;
+}
+
+export function BookmarkSearch({ searchQuery, onSearchChange }: BookmarkSearchProps) {
+    return (
+        <div className="search-container">
+            <Search className="search-icon" />
+            <input
+                type="text"
+                placeholder="Search bookmarks by title, URL, or tags..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="search-input"
+            />
+            {searchQuery && (
+                <button
+                    onClick={() => onSearchChange('')}
+                    className="search-clear"
+                    aria-label="Clear search"
+                >
+                    ×
+                </button>
+            )}
+        </div>
+    );
+}
