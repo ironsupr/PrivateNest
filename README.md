@@ -24,7 +24,7 @@ A smart, private bookmark manager built with **Next.js 15**, **Supabase**, and *
 - **Export** — Download bookmarks as JSON or browser-importable HTML
 
 ### Polish
-- **Dark/Light mode** — Toggle or auto-detect system preference
+<!-- - **Dark/Light mode** — Toggle or auto-detect system preference -->
 - **Stats bar** — Total, read/unread, weekly additions, top tags
 - **Keyboard shortcuts** — `Ctrl+Alt+N` to add, `Ctrl+K` to search
 - **Responsive** — Works on mobile and desktop
