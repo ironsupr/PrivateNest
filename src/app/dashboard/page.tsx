@@ -10,6 +10,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatsOverview } from '@/components/dashboard/StatsOverview';
 import { BookmarkGrid } from '@/components/dashboard/BookmarkGrid';
 import { useBookmarks } from '@/hooks/useBookmarks';
+import { useCollections } from '@/hooks/useCollections';
 import { AddBookmarkDialog } from '@/components/dashboard/AddBookmarkDialog';
 import { DeleteConfirmationDialog } from '@/components/dashboard/DeleteConfirmationDialog';
 
@@ -26,7 +27,9 @@ export default function DashboardPage() {
         deleteBookmark,
         toggleRead,
         toggleFavorite,
-        toggleArchive
+        toggleArchive,
+        toggleBookmarkSharing,
+        moveToCollection
     } = useBookmarks();
     const [authLoading, setAuthLoading] = useState(true);
 
@@ -38,8 +41,12 @@ export default function DashboardPage() {
         sortBy,
         setSortBy,
         currentView,
-        setCurrentView
+        setCurrentView,
+        selectedCollectionId,
+        setSelectedCollectionId
     } = useDashboard();
+
+    const { collections, addCollection } = useCollections();
 
     // Dialog State
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -93,15 +100,27 @@ export default function DashboardPage() {
     const filteredBookmarks = useMemo(() => {
         let result = [...bookmarks];
 
-        // View Filtering
-        if (currentView === 'standard') {
+        // Collection Filter
+        if (selectedCollectionId) {
+            result = result.filter(b => b.collection_id === selectedCollectionId);
+        }
+
+        // View Filtering (only if no collection is selected, or let them stack?)
+        // Usually, clicking a folder overrides the "My Nest" inbox view but keeps other filters.
+        if (!selectedCollectionId) {
+            if (currentView === 'standard') {
+                result = result.filter(b => !b.is_archived && !b.is_read);
+            } else if (currentView === 'all') {
+                result = result.filter(b => !b.is_archived);
+            } else if (currentView === 'favorites') {
+                result = result.filter(b => b.is_favorite && !b.is_archived);
+            } else if (currentView === 'archive') {
+                result = result.filter(b => b.is_archived);
+            }
+        } else {
+            // If in a collection, we still want to hide archived items by default unless in Archive view
+            // But usually folders are "active list" subsets.
             result = result.filter(b => !b.is_archived);
-        } else if (currentView === 'all') {
-            result = result.filter(b => !b.is_archived);
-        } else if (currentView === 'favorites') {
-            result = result.filter(b => b.is_favorite && !b.is_archived);
-        } else if (currentView === 'archive') {
-            result = result.filter(b => b.is_archived);
         }
 
         // Search filter
@@ -131,6 +150,8 @@ export default function DashboardPage() {
         return result;
     }, [bookmarks, searchQuery, selectedTag, sortBy, currentView]);
 
+    const selectedCollection = collections.find((c: any) => c.id === selectedCollectionId);
+
     const viewLabels = {
         standard: 'My Nest',
         all: 'All Bookmarks',
@@ -153,14 +174,20 @@ export default function DashboardPage() {
                 <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-navy-900 mb-2">
-                            {selectedTag ? `#${selectedTag}` : viewLabels[currentView]}
+                            {selectedCollectionId
+                                ? selectedCollection?.name
+                                : selectedTag ? `#${selectedTag}` : viewLabels[currentView]}
                         </h1>
                         <p className="text-navy-700/70">
-                            {selectedTag
-                                ? `Showing all bookmarks tagged with "${selectedTag}"`
-                                : currentView === 'standard'
-                                    ? 'Welcome back to your digital sanctuary.'
-                                    : `Viewing your ${viewLabels[currentView].toLowerCase()}.`}
+                            {selectedCollectionId
+                                ? `Viewing bookmarks in "${selectedCollection?.name}"`
+                                : selectedTag
+                                    ? `Showing all bookmarks tagged with "${selectedTag}"`
+                                    : currentView === 'standard'
+                                        ? 'Your unread gems, waiting for you.'
+                                        : currentView === 'all'
+                                            ? 'Your complete collection of non-archived bookmarks.'
+                                            : `Viewing your ${viewLabels[currentView].toLowerCase()}.`}
                         </p>
                     </div>
 
@@ -182,13 +209,15 @@ export default function DashboardPage() {
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-navy-900">
                         {searchQuery ? `Search Results (${filteredBookmarks.length})` :
-                            selectedTag ? `Tagged: ${selectedTag}` :
-                                currentView === 'standard' ? 'Recent Bookmarks' : viewLabels[currentView]}
+                            selectedCollectionId ? `Folder: ${selectedCollection?.name}` :
+                                selectedTag ? `Tagged: ${selectedTag}` :
+                                    currentView === 'standard' ? 'Recent Inbox' : viewLabels[currentView]}
                     </h2>
-                    {(selectedTag || currentView !== 'standard') && (
+                    {(selectedTag || selectedCollectionId || currentView !== 'standard') && (
                         <button
                             onClick={() => {
                                 setSelectedTag(null);
+                                setSelectedCollectionId(null);
                                 setCurrentView('standard');
                             }}
                             className="text-sm font-medium text-indigo-accent hover:text-indigo-hover transition-colors"
@@ -200,12 +229,16 @@ export default function DashboardPage() {
 
                 <BookmarkGrid
                     bookmarks={filteredBookmarks}
+                    collections={collections}
                     loading={bookmarksLoading}
                     onDelete={handleDeleteRequest}
                     onEdit={handleEditClick}
                     onToggleRead={toggleRead}
                     onToggleFavorite={toggleFavorite}
                     onToggleArchive={toggleArchive}
+                    onMoveToCollection={moveToCollection}
+                    onAddCollection={addCollection}
+                    onToggleSharing={toggleBookmarkSharing}
                 />
             </main>
 

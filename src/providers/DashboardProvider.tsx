@@ -14,6 +14,8 @@ interface DashboardContextType {
     setSortBy: (sort: SortOption) => void;
     currentView: DashboardView;
     setCurrentView: (view: DashboardView) => void;
+    selectedCollectionId: string | null;
+    setSelectedCollectionId: (id: string | null) => void;
     resetFilters: () => void;
 }
 
@@ -24,10 +26,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     const [currentView, setCurrentView] = useState<DashboardView>('standard');
+    const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
 
     const resetFilters = () => {
         setSearchQuery('');
         setSelectedTag(null);
+        setSelectedCollectionId(null);
         setCurrentView('standard');
     };
 
@@ -42,6 +46,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
                 setSortBy,
                 currentView,
                 setCurrentView,
+                selectedCollectionId,
+                setSelectedCollectionId,
                 resetFilters,
             }}
         >

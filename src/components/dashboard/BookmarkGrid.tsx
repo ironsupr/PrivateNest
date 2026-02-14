@@ -1,26 +1,34 @@
 'use client';
 
-import { Bookmark } from '@/types';
+import { Bookmark, Collection } from '@/types';
 import { BookmarkCard } from './BookmarkCard';
 
 interface BookmarkGridProps {
     bookmarks: Bookmark[];
+    collections?: Collection[];
     loading?: boolean;
     onDelete?: (id: string) => void;
     onEdit?: (bookmark: Bookmark) => void;
     onToggleRead?: (id: string, currentStatus: boolean) => void;
     onToggleFavorite?: (id: string, currentStatus: boolean) => void;
     onToggleArchive?: (id: string, currentStatus: boolean) => void;
+    onMoveToCollection?: (id: string, collectionId: string | null) => void;
+    onAddCollection?: (name: string) => Promise<Collection>;
+    onToggleSharing?: (id: string, isPublic: boolean) => void;
 }
 
 export function BookmarkGrid({
     bookmarks,
+    collections = [],
     loading,
     onDelete,
     onEdit,
     onToggleRead,
     onToggleFavorite,
-    onToggleArchive
+    onToggleArchive,
+    onMoveToCollection,
+    onAddCollection,
+    onToggleSharing
 }: BookmarkGridProps) {
     if (loading) {
         return (
@@ -66,11 +74,15 @@ export function BookmarkGrid({
                 <BookmarkCard
                     key={bookmark.id}
                     bookmark={bookmark}
+                    collections={collections}
                     onDelete={onDelete}
                     onEdit={onEdit}
                     onToggleRead={onToggleRead}
                     onToggleFavorite={onToggleFavorite}
                     onToggleArchive={onToggleArchive}
+                    onMoveToCollection={onMoveToCollection}
+                    onAddCollection={onAddCollection}
+                    onToggleSharing={onToggleSharing}
                 />
             ))}
         </div>
