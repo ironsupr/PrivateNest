@@ -24,10 +24,11 @@ export function useBookmarks() {
         setLoading(false);
     }, [supabase]);
 
-    // Real-time subscription
+    // Real-time subscription + refetch on tab focus
     useEffect(() => {
         fetchBookmarks();
 
+        // Realtime subscription for live updates
         const channel = supabase
             .channel('bookmarks-realtime')
             .on(
@@ -40,7 +41,6 @@ export function useBookmarks() {
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
                         setBookmarks((prev) => {
-                            // Avoid duplicates
                             if (prev.some((b) => b.id === (payload.new as Bookmark).id)) {
                                 return prev;
                             }
@@ -63,8 +63,24 @@ export function useBookmarks() {
             )
             .subscribe();
 
+        // Refetch when tab becomes visible (covers cases where Realtime misses events)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchBookmarks();
+            }
+        };
+
+        const handleFocus = () => {
+            fetchBookmarks();
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
+
         return () => {
             supabase.removeChannel(channel);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
         };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -132,6 +148,27 @@ export function useBookmarks() {
         );
     };
 
+    const updateBookmark = async (
+        id: string,
+        fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags'>>
+    ) => {
+        const now = new Date().toISOString();
+
+        const { error } = await supabase
+            .from('bookmarks')
+            .update({ ...fields, updated_at: now })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        // Optimistic update
+        setBookmarks((prev) =>
+            prev.map((b) =>
+                b.id === id ? { ...b, ...fields, updated_at: now } : b
+            )
+        );
+    };
+
     const checkDuplicate = (url: string): boolean => {
         try {
             const normalized = new URL(url).href;
@@ -159,6 +196,7 @@ export function useBookmarks() {
         addBookmark,
         deleteBookmark,
         toggleRead,
+        updateBookmark,
         checkDuplicate,
         getAllTags,
     };

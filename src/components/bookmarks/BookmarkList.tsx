@@ -11,6 +11,7 @@ interface BookmarkListProps {
     activeTag: string | null;
     onDelete: (id: string) => void;
     onToggleRead: (id: string, currentStatus: boolean) => void;
+    onUpdate: (id: string, fields: Partial<Pick<Bookmark, 'url' | 'title' | 'description' | 'tags'>>) => Promise<void>;
 }
 
 export function BookmarkList({
@@ -20,6 +21,7 @@ export function BookmarkList({
     activeTag,
     onDelete,
     onToggleRead,
+    onUpdate,
 }: BookmarkListProps) {
     // Filter by search
     let filtered = bookmarks;
@@ -87,6 +89,7 @@ export function BookmarkList({
                         bookmark={bookmark}
                         onDelete={onDelete}
                         onToggleRead={onToggleRead}
+                        onUpdate={onUpdate}
                     />
                 ))}
             </div>

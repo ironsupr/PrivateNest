@@ -320,16 +320,12 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(
-    ellipse at 30% 20%,
-    color-mix(in srgb, var(--accent) 8%, transparent) 0%,
-    transparent 50%
-  ),
-  radial-gradient(
-    ellipse at 70% 80%,
-    color-mix(in srgb, var(--accent) 5%, transparent) 0%,
-    transparent 50%
-  );
+  background: radial-gradient(ellipse at 30% 20%,
+      color-mix(in srgb, var(--accent) 8%, transparent) 0%,
+      transparent 50%),
+    radial-gradient(ellipse at 70% 80%,
+      color-mix(in srgb, var(--accent) 5%, transparent) 0%,
+      transparent 50%);
   pointer-events: none;
 }
 
@@ -404,7 +400,7 @@ body {
   color: var(--accent);
 }
 
-.login-feature > div {
+.login-feature>div {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -487,12 +483,230 @@ body {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {
   .dashboard-controls {
     flex-direction: column;
   }
+}
+
+/* ========================================
+   STATS GRID
+   ======================================== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.stats-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.stats-card:hover {
+  border-color: var(--accent-muted);
+  box-shadow: var(--shadow-md);
+}
+
+.stats-card-tags {
+  grid-column: span 4;
+}
+
+.stats-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.stats-card-icon-total {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.stats-card-icon-unread {
+  background: color-mix(in srgb, #3b82f6 12%, transparent);
+  color: #3b82f6;
+}
+
+.stats-card-icon-read {
+  background: color-mix(in srgb, #22c55e 12%, transparent);
+  color: #22c55e;
+}
+
+.stats-card-icon-week {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.stats-card-icon-tags {
+  background: color-mix(in srgb, #a855f7 12%, transparent);
+  color: #a855f7;
+}
+
+.stats-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stats-card-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.stats-card-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.stats-top-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stats-tag-pill {
+  font-size: 12px;
+  padding: 3px 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.stats-tag-count {
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-card-tags {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 400px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-card-tags {
+    grid-column: span 1;
+  }
+}
+
+/* ========================================
+   EXPORT
+   ======================================== */
+
+.export-container {
+  position: relative;
+}
+
+.export-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  min-width: 200px;
+  padding: 4px;
+  animation: slideDown 0.15s ease;
+}
+
+.export-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.export-option:hover {
+  background: var(--bg-hover);
+}
+
+.export-option>div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.export-option-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.export-option-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* ========================================
+   KEYBOARD SHORTCUT HINTS
+   ======================================== */
+
+.shortcut-hints {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.shortcut-hints span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcut-hints kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  min-width: 20px;
+  box-shadow: 0 1px 0 var(--border-primary);
 }
 
 /* ========================================
@@ -541,6 +755,7 @@ body {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -613,7 +828,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: translateY(-50%) rotate(360deg); }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
 }
 
 .form-warning {
@@ -968,6 +1185,41 @@ body {
 }
 
 /* ========================================
+   EDIT MODE
+   ======================================== */
+
+.bookmark-editing {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.edit-form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.edit-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ========================================
    BOOKMARK LIST
    ======================================== */
 
@@ -1028,6 +1280,83 @@ body {
 }
 
 /* ========================================
+   POPUP / CONFIRMATION MODAL
+   ======================================== */
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.15s ease;
+  padding: 20px;
+}
+
+.popup-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+  animation: popupSlide 0.2s ease;
+}
+
+@keyframes popupSlide {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.popup-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: var(--warning-light);
+  color: var(--warning);
+  margin-bottom: 16px;
+}
+
+.popup-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.popup-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.popup-actions .btn {
+  min-width: 110px;
+}
+
+/* ========================================
    SCROLLBAR
    ======================================== */
 
@@ -1061,8 +1390,13 @@ body {
    ======================================== */
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .bookmark-card {

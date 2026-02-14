@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
-import { Plus, Loader2, AlertTriangle, Link as LinkIcon } from 'lucide-react';
+import { Plus, Loader2, AlertTriangle, Link as LinkIcon, Copy } from 'lucide-react';
+
 import { TagBadge } from '@/components/tags/TagBadge';
 import type { UrlMetadata } from '@/types';
 
@@ -14,9 +15,11 @@ interface AddBookmarkFormProps {
         tags: string[]
     ) => Promise<void>;
     checkDuplicate: (url: string) => boolean;
+    isExpanded?: boolean;
+    onExpandChange?: (expanded: boolean) => void;
 }
 
-export function AddBookmarkForm({ onAdd, checkDuplicate }: AddBookmarkFormProps) {
+export function AddBookmarkForm({ onAdd, checkDuplicate, isExpanded, onExpandChange }: AddBookmarkFormProps) {
     const [url, setUrl] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -27,9 +30,17 @@ export function AddBookmarkForm({ onAdd, checkDuplicate }: AddBookmarkFormProps)
     const [fetching, setFetching] = useState(false);
     const [isDuplicate, setIsDuplicate] = useState(false);
     const [error, setError] = useState('');
-    const [expanded, setExpanded] = useState(false);
+    const [internalExpanded, setInternalExpanded] = useState(false);
     const [metadataFetched, setMetadataFetched] = useState(false);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
+
+    // Use external control if provided, otherwise internal
+    const expanded = isExpanded !== undefined ? isExpanded : internalExpanded;
+    const setExpanded = (val: boolean) => {
+        if (onExpandChange) onExpandChange(val);
+        setInternalExpanded(val);
+    };
 
     const normalizeUrl = (inputUrl: string): string => {
         let fullUrl = inputUrl.trim();
@@ -106,12 +117,10 @@ export function AddBookmarkForm({ onAdd, checkDuplicate }: AddBookmarkFormProps)
         setTags(tags.filter((t) => t !== tagToRemove));
     };
 
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        if (!url) return;
-
+    const saveBookmark = async () => {
         setLoading(true);
         setError('');
+        setShowDuplicateConfirm(false);
 
         try {
             const fullUrl = normalizeUrl(url);
@@ -156,8 +165,50 @@ export function AddBookmarkForm({ onAdd, checkDuplicate }: AddBookmarkFormProps)
         setLoading(false);
     };
 
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!url) return;
+
+        // If duplicate, show confirmation popup instead of saving directly
+        const fullUrl = normalizeUrl(url);
+        if (checkDuplicate(fullUrl)) {
+            setShowDuplicateConfirm(true);
+            return;
+        }
+
+        await saveBookmark();
+    };
+
     return (
         <div className="add-bookmark-container">
+            {/* Duplicate Confirmation Popup */}
+            {showDuplicateConfirm && (
+                <div className="popup-overlay" onClick={() => setShowDuplicateConfirm(false)}>
+                    <div className="popup-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="popup-icon-wrap">
+                            <Copy className="w-6 h-6" />
+                        </div>
+                        <h3 className="popup-title">Duplicate Bookmark</h3>
+                        <p className="popup-message">
+                            This URL is already in your bookmarks. Do you want to add it again?
+                        </p>
+                        <div className="popup-actions">
+                            <button
+                                onClick={() => setShowDuplicateConfirm(false)}
+                                className="btn btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={saveBookmark}
+                                className="btn btn-primary"
+                            >
+                                Add Anyway
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {!expanded ? (
                 <button
                     onClick={() => setExpanded(true)}

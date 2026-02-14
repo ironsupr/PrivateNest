@@ -1,17 +1,20 @@
 'use client';
 
 import { Search } from 'lucide-react';
+import type { RefObject } from 'react';
 
 interface BookmarkSearchProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
+    inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-export function BookmarkSearch({ searchQuery, onSearchChange }: BookmarkSearchProps) {
+export function BookmarkSearch({ searchQuery, onSearchChange, inputRef }: BookmarkSearchProps) {
     return (
         <div className="search-container">
             <Search className="search-icon" />
             <input
+                ref={inputRef}
                 type="text"
                 placeholder="Search bookmarks by title, URL, or tags..."
                 value={searchQuery}
@@ -30,3 +33,4 @@ export function BookmarkSearch({ searchQuery, onSearchChange }: BookmarkSearchPr
         </div>
     );
 }
+
